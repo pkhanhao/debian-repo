@@ -1,6 +1,7 @@
 #!/bin/bash
 #apt-get install -y "${APTGETOPT[@]}" lsb-release devscripts
 codename=$(lsb_release --short --codename)
+apt-get install -y  libdistro-info-perl
 cd /tmp/buildd/*/debian/..
 debchange --append --maintmaint --distribution "${codename}" "Build against ${codename}"
 sed -i '1s/)/~'${codename}')/' debian/changelog

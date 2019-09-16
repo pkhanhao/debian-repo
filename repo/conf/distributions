@@ -10,10 +10,25 @@ Tracking: all includechanges
 SignWith: yes
 Log: sid.log
 
-Codename: jessie
-Suite: testing
+Codename: stretch
+Suite: stable
 Components: main contrib non-free
-Architectures: i386 amd64 source
+UDebComponents: main contrib non-free
+Architectures: amd64 source
+Origin: Netease
+Label: Netease
+Version: 1.0
+Description: Custom debian stretch repo for NetEase
+Tracking: all includechanges
+SignWith: yes
+Log: stretch.log
+ --changes email_changes
+
+Codename: jessie
+Suite: oldstable
+Components: main contrib non-free
+UDebComponents: main contrib non-free
+Architectures: amd64 source
 Origin: Netease
 Label: Netease
 Version: 1.0
@@ -24,7 +39,7 @@ Log: jessie.log
  --changes email_changes
 
 Codename: wheezy
-Suite: stable
+Suite: oldstable
 Components: main contrib non-free
 Architectures: i386 amd64 source
 Origin: Netease

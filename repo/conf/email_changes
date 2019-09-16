@@ -1,6 +1,6 @@
 #!/bin/bash
 dist=$2
-to=sysadmin@hz.netease.com
+to=hzhanhao@corp.netease.com
 changes=${5##*/}
 package=${changes%.*}
 mirror=$(awk '/^OTHERMIRROR/ {print $2}' ~/.pbuilderrc)

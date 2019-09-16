@@ -36,7 +36,7 @@ init() {
 }
 usage() {
   cat <<EOF
-USAGE: $(basename $0) [-hswjSai] subcommand [options ...]
+USAGE: $(basename $0) [-hswjtSai] subcommand [options ...]
 
 OPTIONS:
   -h | help
@@ -44,6 +44,7 @@ OPTIONS:
   -s | squeeze
   -w | wheezy
   -j | jessie
+  -t | stretch
   -S | sid
   -a | amd64
   -i | i386
@@ -95,12 +96,13 @@ load_var DEFAULT_ARCHS
 DISTS=""
 ARCHS=""
 OPTIND=1
-while getopts "lswjSaih" opt; do
+while getopts "lswjtSaih" opt; do
   case "$opt" in
     l) DISTS="$DISTS lenny" ;;
     s) DISTS="$DISTS squeeze" ;;
     w) DISTS="$DISTS wheezy" ;;
     j) DISTS="$DISTS jessie" ;;
+    t) DISTS="$DISTS stretch" ;;
     S) DISTS="$DISTS sid" ;;
     a) ARCHS="$ARCHS amd64" ;;
     i) ARCHS="$ARCHS i386" ;;
@@ -171,12 +173,12 @@ ucl() {
 }
 
 download() {
-  git-import-dsc --download "$@"
+  gbp import-dsc --download "$@"
 }
 
 refresh_patch() {
-  gbp-pq drop
-  gbp-pq import
+  gbp pq drop
+  gbp pq import
 }
 
 # New patch
@@ -235,9 +237,9 @@ new_change() {
   fi
   version=$(dpkg-parsechangelog | awk '/^Version: / {print $2}')
   if echo ${version} | grep -q "${append}[0-9]*$"; then
-    git-dch --release
+    gbp dch --release
   else
-    git-dch --release --new-version="${version}+${append}1"
+    gbp dch --release --new-version="${version}+${append}1"
   fi
   commit_change
 }
@@ -263,7 +265,7 @@ build() {
     build_type="-F"
     for ARCH in ${ARCHS}; do
       tmux_run "DEB_BUILD_OPTIONS='nocheck parallel=$((NCPU/2))' \
-        COWBUILDER_BASE=${COWBUILDER_BASE} time -p git-buildpackage \
+        COWBUILDER_BASE=${COWBUILDER_BASE} time -p gbp buildpackage --git-no-pristine-tar \
         --git-export-dir='../build_${DIST}_${ARCH}' \
         --git-dist=${DIST} --git-arch=${ARCH} \
         -nc ${source_type} ${build_type} $*"
@@ -300,7 +302,7 @@ include() {
 
 tag() {
   check_dir
-  git-buildpackage --git-tag-only "$@"
+  gbp buildpackage --git-tag-only "$@"
   local branch num_patches num_gitlog version
   branch=$(git rev-parse --abbrev-ref HEAD)
   if git branch | grep -q "patch-queue/${branch}"; then
@@ -366,8 +368,8 @@ repo() {
   for DIST in ${DISTS}; do
     if [ x"$action" = x"include_all" ]; then
       for ARCH in ${ARCHS}; do
-        reprepro -b "$base" include ${DIST} \
-          "../build_${DIST}_${ARCH}/${source}_${version/[0-9]*:/}~${DIST}_${ARCH}.changes"
+        reprepro -b "$base" --ignore=wrongdistribution --ignore=surprisingbinary include ${DIST} \
+          "../build_${DIST}_${ARCH}/${source}_${version/[0-9]*:/}_${ARCH}.changes"
       done
     else
       reprepro -b "$base" "$action" ${DIST} "$@"
