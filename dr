@@ -36,7 +36,7 @@ init() {
 }
 usage() {
   cat <<EOF
-USAGE: $(basename $0) [-hswjSai] subcommand [options ...]
+USAGE: $(basename $0) [-hswjtSai] subcommand [options ...]
 
 OPTIONS:
   -h | help
@@ -44,6 +44,7 @@ OPTIONS:
   -s | squeeze
   -w | wheezy
   -j | jessie
+  -t | stretch
   -S | sid
   -a | amd64
   -i | i386
@@ -95,12 +96,13 @@ load_var DEFAULT_ARCHS
 DISTS=""
 ARCHS=""
 OPTIND=1
-while getopts "lswjSaih" opt; do
+while getopts "lswjtSaih" opt; do
   case "$opt" in
     l) DISTS="$DISTS lenny" ;;
     s) DISTS="$DISTS squeeze" ;;
     w) DISTS="$DISTS wheezy" ;;
     j) DISTS="$DISTS jessie" ;;
+    t) DISTS="$DISTS stretch" ;;
     S) DISTS="$DISTS sid" ;;
     a) ARCHS="$ARCHS amd64" ;;
     i) ARCHS="$ARCHS i386" ;;
@@ -263,7 +265,7 @@ build() {
     build_type="-F"
     for ARCH in ${ARCHS}; do
       tmux_run "DEB_BUILD_OPTIONS='nocheck parallel=$((NCPU/2))' \
-        COWBUILDER_BASE=${COWBUILDER_BASE} time -p git-buildpackage \
+        COWBUILDER_BASE=${COWBUILDER_BASE} time -p git-buildpackage --git-no-pristine-tar \
         --git-export-dir='../build_${DIST}_${ARCH}' \
         --git-dist=${DIST} --git-arch=${ARCH} \
         -nc ${source_type} ${build_type} $*"
@@ -366,7 +368,7 @@ repo() {
   for DIST in ${DISTS}; do
     if [ x"$action" = x"include_all" ]; then
       for ARCH in ${ARCHS}; do
-        reprepro -b "$base" include ${DIST} \
+        reprepro -b "$base" --ignore=surprisingbinary include ${DIST} \
           "../build_${DIST}_${ARCH}/${source}_${version/[0-9]*:/}~${DIST}_${ARCH}.changes"
       done
     else
